@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Live Preview</title>
+<style>
+  :root {
+    --bg: #faf8f3;
+    --panel: #ffffff;
+    --border: #e4ddd0;
+    --text: #2b2620;
+    --text-dim: #8a8170;
+    --accent: #a8542e;
+    --mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    --serif: 'Georgia', 'Iowan Old Style', serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel);
+  }
+
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  header .eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+  }
+
+  .toolbar button {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .toolbar button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .panes {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .pane-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 10px 24px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+
+  #editor {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 24px;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.7;
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  .divider {
+    width: 1px;
+    background: var(--border);
+  }
+
+  #preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 36px;
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.75;
+    background: var(--bg);
+  }
+
+  #preview h1, #preview h2, #preview h3 {
+    font-family: -apple-system, sans-serif;
+    color: #1a1610;
+    line-height: 1.3;
+  }
+  #preview h1 { font-size: 28px; border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-top: 0; }
+  #preview h2 { font-size: 22px; margin-top: 32px; }
+  #preview h3 { font-size: 17px; margin-top: 24px; }
+
+  #preview p { margin: 14px 0; }
+
+  #preview code {
+    font-family: var(--mono);
+    background: #efe8da;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: var(--accent);
+  }
+
+  #preview pre {
+    background: #2b2620;
+    color: #f0ebe0;
+    padding: 16px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  #preview pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+
+  #preview blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 16px 0;
+    padding: 4px 0 4px 16px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  #preview ul, #preview ol {
+    padding-left: 28px;
+  }
+  #preview li { margin: 6px 0; }
+
+  #preview a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+
+  #preview img {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+
+  #preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    font-family: -apple-system, sans-serif;
+    font-size: 14px;
+  }
+  #preview th, #preview td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  #preview th {
+    background: #efe8da;
+    font-weight: 600;
+  }
+
+  #preview hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  .stats {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 8px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+  }
+
+  @media (max-width: 760px) {
+    .panes { flex-direction: column; }
+    .divider { width: 100%; height: 1px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <span class="eyebrow">Markdown Live Preview</span>
+    <h1>Yaz, anında önizle</h1>
+  </div>
+  <div class="toolbar">
+    <button id="btn-download">İndir (.md)</button>
+    <button id="btn-clear">Temizle</button>
+  </div>
+</header>
+
+<div class="panes">
+  <div class="pane">
+    <div class="pane-label">Markdown</div>
+    <textarea id="editor" spellcheck="false"></textarea>
+  </div>
+  <div class="divider"></div>
+  <div class="pane">
+    <div class="pane-label">Önizleme</div>
+    <div id="preview"></div>
+  </div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<script>
+// --- Minimal, bağımlılıksız Markdown -> HTML dönüştürücü ---
+// Not: Bu, CommonMark'ın tam bir uygulaması değildir; sık kullanılan
+// sözdizimini (başlıklar, kalın/italik, listeler, kod blokları, linkler,
+// görseller, tablolar, alıntılar) kapsayan hafif bir alt kümedir.
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderInline(text) {
+  // Önce kod span'lerini koru (içindeki özel karakterler işlenmemeli)
+  const codeSpans = [];
+  text = text.replace(/`([^`]+)`/g, (_, code) => {
+    codeSpans.push(escapeHtml(code));
+    return `\u0000CODE${codeSpans.length - 1}\u0000`;
+  });
+
+  text = escapeHtml(text);
+
+  // Görseller (linklerden önce işlenmeli)
+  text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
+  // Linkler
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Kalın
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  // İtalik
+  text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+  // Üstü çizili
+  text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+  // Kod span'lerini geri koy
+  text = text.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => `<code>${codeSpans[i]}</code>`);
+
+  return text;
+}
+
+function renderTable(lines) {
+  const header = lines[0].trim().replace(/^\||\|$/g, '').split('|').map(s => s.trim());
+  const rows = lines.slice(2).map(line =>
+    line.trim().replace(/^\||\|$/g, '').split('|').map(s => s.trim())
+  );
+
+  let html = '<table><thead><tr>';
+  header.forEach(h => html += `<th>${renderInline(h)}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    row.forEach(cell => html += `<td>${renderInline(cell)}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function markdownToHtml(markdown) {
+  const lines = markdown.split('\n');
+  let html = '';
+  let i = 0;
+  let inCodeBlock = false;
+  let codeBlockContent = [];
+  let codeBlockLang = '';
+  let listStack = []; // { type: 'ul'|'ol', indent }
+  let inBlockquote = false;
+  let paragraphBuffer = [];
+
+  function flushParagraph() {
+    if (paragraphBuffer.length) {
+      html += `<p>${renderInline(paragraphBuffer.join(' '))}</p>\n`;
+      paragraphBuffer = [];
+    }
+  }
+
+  function closeLists() {
+    while (listStack.length) {
+      html += `</${listStack.pop().type}>`;
+    }
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Kod bloğu
+    if (line.trim().startsWith('```')) {
+      flushParagraph();
+      closeLists();
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeBlockLang = line.trim().slice(3).trim();
+        codeBlockContent = [];
+      } else {
+        html += `<pre><code class="lang-${codeBlockLang}">${escapeHtml(codeBlockContent.join('\n'))}</code></pre>\n`;
+        inCodeBlock = false;
+      }
+      i++;
+      continue;
+    }
+    if (inCodeBlock) {
+      codeBlockContent.push(line);
+      i++;
+      continue;
+    }
+
+    // Tablo tespiti (başlık satırı + ayraç satırı)
+    if (/^\s*\|.*\|\s*$/.test(line) && lines[i + 1] && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1])) {
+      flushParagraph();
+      closeLists();
+      const tableLines = [line, lines[i + 1]];
+      let j = i + 2;
+      while (j < lines.length && /^\s*\|.*\|\s*$/.test(lines[j])) {
+        tableLines.push(lines[j]);
+        j++;
+      }
+      html += renderTable(tableLines) + '\n';
+      i = j;
+      continue;
+    }
+
+    // Başlıklar
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      flushParagraph();
+      closeLists();
+      const level = headingMatch[1].length;
+      html += `<h${level}>${renderInline(headingMatch[2])}</h${level}>\n`;
+      i++;
+      continue;
+    }
+
+    // Yatay çizgi
+    if (/^(---|\*\*\*|___)\s*$/.test(line.trim())) {
+      flushParagraph();
+      closeLists();
+      html += '<hr>\n';
+      i++;
+      continue;
+    }
+
+    // Alıntı
+    if (line.trim().startsWith('>')) {
+      flushParagraph();
+      closeLists();
+      const quoteLines = [];
+      while (i < lines.length && lines[i].trim().startsWith('>')) {
+        quoteLines.push(lines[i].trim().replace(/^>\s?/, ''));
+        i++;
+      }
+      html += `<blockquote>${renderInline(quoteLines.join(' '))}</blockquote>\n`;
+      continue;
+    }
+
+    // Sırasız liste
+    const ulMatch = line.match(/^(\s*)[-*+]\s+(.*)$/);
+    if (ulMatch) {
+      flushParagraph();
+      if (!listStack.length || listStack[listStack.length - 1].type !== 'ul') {
+        closeLists();
+        html += '<ul>';
+        listStack.push({ type: 'ul', indent: ulMatch[1].length });
+      }
+      html += `<li>${renderInline(ulMatch[2])}</li>`;
+      i++;
+      continue;
+    }
+
+    // Sıralı liste
+    const olMatch = line.match(/^(\s*)\d+\.\s+(.*)$/);
+    if (olMatch) {
+      flushParagraph();
+      if (!listStack.length || listStack[listStack.length - 1].type !== 'ol') {
+        closeLists();
+        html += '<ol>';
+        listStack.push({ type: 'ol', indent: olMatch[1].length });
+      }
+      html += `<li>${renderInline(olMatch[2])}</li>`;
+      i++;
+      continue;
+    }
+
+    // Boş satır
+    if (line.trim() === '') {
+      flushParagraph();
+      closeLists();
+      i++;
+      continue;
+    }
+
+    // Normal paragraf satırı
+    paragraphBuffer.push(line.trim());
+    i++;
+  }
+
+  flushParagraph();
+  closeLists();
+  return html;
+}
+
+// --- UI bağlama ---
+
+const editor = document.getElementById('editor');
+const preview = document.getElementById('preview');
+const statsEl = document.getElementById('stats');
+
+const DEFAULT_CONTENT = `# Markdown Live Preview
+
+Bu kutuya yazın, sağda **anında** önizlemesini görün.
+
+## Özellikler
+
+- Kalın, *italik* ve ~~üstü çizili~~ metin
+- \`satır içi kod\` ve kod blokları
+- [Linkler](https://example.com) ve görseller
+- Sıralı/sırasız listeler
+- Tablolar
+
+### Kod örneği
+
+\`\`\`javascript
+function selamla(isim) {
+  return \`Merhaba, \${isim}!\`;
+}
+\`\`\`
+
+> Bu bir alıntı bloğu. Önemli noktaları vurgulamak için kullanılır.
+
+| Sütun A | Sütun B |
+|---------|---------|
+| Değer 1 | Değer 2 |
+| Değer 3 | Değer 4 |
+
+---
+
+Düzenlemeye başlamak için bu metni silip kendi içeriğinizi yazın.
+`;
+
+function update() {
+  const markdown = editor.value;
+  preview.innerHTML = markdownToHtml(markdown);
+
+  const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+  const chars = markdown.length;
+  statsEl.textContent = `${words} kelime · ${chars} karakter`;
+}
+
+editor.addEventListener('input', update);
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (confirm('Tüm içerik silinecek, onaylıyor musunuz?')) {
+    editor.value = '';
+    update();
+  }
+});
+
+document.getElementById('btn-download').addEventListener('click', () => {
+  const blob = new Blob([editor.value], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'belge.md';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+editor.value = DEFAULT_CONTENT;
+update();
+</script>
+</body>
+</html>
