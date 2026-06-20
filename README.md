@@ -60,3 +60,8 @@ desteklenmeyebilir). Üretim ortamında tam uyumluluk gerekiyorsa
 ## Lisans
 
 MIT
+
+
+---
+
+> Made in [discord.gg/codeshare](https://discord.gg/codeshare) · [astra-dev.com.tr](https://astra-dev.com.tr)
